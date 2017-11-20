@@ -304,6 +304,30 @@ module.exports = {
         }).call({}, done);
     },
 
+    "async test with sandbox and spy which fails": function (done) {
+        instance(function (callback) {
+            var globalObj = {
+                addOne: function (arg) {
+                    return this.addOneInner(arg);
+                },
+                addOneInner: function (arg) {
+                    return arg + 1;
+                }
+            };
+            var addOneInnerSpy = this.spy();
+            this.stub(globalObj, "addOneInner").callsFake(addOneInnerSpy);
+
+            nextTick(function () {
+                globalObj.addOne(41);
+
+                // Only called once. This assertion error should not have side effects on other tests.
+                assert(addOneInnerSpy.calledTwice);
+
+                callback();
+            });
+        }).call({}, done);
+    },
+
     "async test preserves additional args and pass them in correct order": function (done) {
         instance(function (arg1, arg2, callback) {
             assert.equals(arg1, "arg1");
